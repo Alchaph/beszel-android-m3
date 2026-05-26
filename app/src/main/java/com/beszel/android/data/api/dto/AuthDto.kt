@@ -35,8 +35,3 @@ data class AuthProvider(
     @SerialName("codeChallengeMethod") val codeChallengeMethod: String = "",
 )
 
-@Serializable
-data class BeszelInfoResponse(
-    val version: String = "",
-    @SerialName("newestVersion") val newestVersion: String = "",
-)

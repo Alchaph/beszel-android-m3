@@ -85,10 +85,6 @@ class BeszelApiClient(
 
     private val normalizedBase = baseUrl.trimEnd('/')
 
-    suspend fun getHubInfo(): ApiResult<BeszelInfoResponse> = safeCall {
-        httpClient.get("$normalizedBase/api/beszel/info").body()
-    }
-
     suspend fun authWithPassword(email: String, password: String): ApiResult<AuthResponse> = safeCall {
         httpClient.post("$normalizedBase/api/collections/users/auth-with-password") {
             setBody(mapOf("identity" to email, "password" to password))

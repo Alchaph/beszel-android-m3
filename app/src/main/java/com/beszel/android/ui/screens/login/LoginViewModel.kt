@@ -50,11 +50,9 @@ class LoginViewModel(
         _uiState.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val client = BeszelApiClient(rawUrl, "", state.trustSelfSigned)
-            when (val info = client.getHubInfo()) {
+            when (val result = client.getAuthMethods()) {
                 is ApiResult.Success -> {
-                    val authMethods = client.getAuthMethods()
-                    val providers = (authMethods as? ApiResult.Success)
-                        ?.data?.authProviders?.map { it.name } ?: emptyList()
+                    val providers = result.data.authProviders.map { it.name }
                     _uiState.update {
                         it.copy(
                             loading = false,
@@ -66,11 +64,12 @@ class LoginViewModel(
                 }
                 is ApiResult.Error -> {
                     val msg = when {
-                        info.message.contains("timeout", true) ||
-                        info.message.contains("connect", true) ->
+                        result.message.contains("timeout", true) ||
+                        result.message.contains("connect", true) ||
+                        result.message.contains("refused", true) ->
                             "Cannot reach $rawUrl. Check the URL and network."
-                        info.code == 404 -> "No Beszel hub found at that URL."
-                        else -> info.message
+                        result.code == 404 -> "No Beszel hub found at that URL."
+                        else -> result.message
                     }
                     _uiState.update { it.copy(loading = false, error = msg) }
                 }
