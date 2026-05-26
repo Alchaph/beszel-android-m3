@@ -1,0 +1,3 @@
+-keep class com.beszel.android.data.** { *; }
+-keepattributes *Annotation*
+-dontwarn org.slf4j.**
