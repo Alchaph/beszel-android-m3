@@ -92,7 +92,7 @@ class BeszelApiClient(
     }
 
     suspend fun getAuthMethods(): ApiResult<AuthMethodsResponse> = safeCall {
-        httpClient.get("$normalizedBase/api/collections/users/list-auth-methods").body()
+        httpClient.get("$normalizedBase/api/collections/users/auth-methods").body()
     }
 
     suspend fun getSystems(): ApiResult<PocketBaseList<SystemRecordDto>> = safeCall {

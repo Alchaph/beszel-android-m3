@@ -17,11 +17,22 @@ data class UserRecord(
     val role: String = "user",
 )
 
+// Matches the /api/collections/users/auth-methods response shape in Beszel 0.8+
 @Serializable
 data class AuthMethodsResponse(
-    @SerialName("authProviders") val authProviders: List<AuthProvider> = emptyList(),
-    @SerialName("usernamePassword") val usernamePassword: Boolean = true,
-    @SerialName("emailPassword") val emailPassword: Boolean = true,
+    val password: PasswordAuthConfig = PasswordAuthConfig(),
+    val oauth2: OAuth2Config = OAuth2Config(),
+)
+
+@Serializable
+data class PasswordAuthConfig(
+    val enabled: Boolean = true,
+)
+
+@Serializable
+data class OAuth2Config(
+    val enabled: Boolean = false,
+    val providers: List<AuthProvider> = emptyList(),
 )
 
 @Serializable
@@ -34,4 +45,3 @@ data class AuthProvider(
     @SerialName("codeChallenge") val codeChallenge: String = "",
     @SerialName("codeChallengeMethod") val codeChallengeMethod: String = "",
 )
-

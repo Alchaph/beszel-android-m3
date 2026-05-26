@@ -52,7 +52,7 @@ class LoginViewModel(
             val client = BeszelApiClient(rawUrl, "", state.trustSelfSigned)
             when (val result = client.getAuthMethods()) {
                 is ApiResult.Success -> {
-                    val providers = result.data.authProviders.map { it.name }
+                    val providers = result.data.oauth2.providers.map { it.name }
                     _uiState.update {
                         it.copy(
                             loading = false,
