@@ -21,7 +21,6 @@ data class LoginUiState(
     val trustSelfSigned: Boolean = false,
     val loading: Boolean = false,
     val error: String? = null,
-    val authProviders: List<String> = emptyList(),
 )
 
 enum class LoginStep { Server, Credentials }
@@ -52,13 +51,11 @@ class LoginViewModel(
             val client = BeszelApiClient(rawUrl, "", state.trustSelfSigned)
             when (val result = client.getAuthMethods()) {
                 is ApiResult.Success -> {
-                    val providers = result.data.oauth2.providers.map { it.name }
                     _uiState.update {
                         it.copy(
                             loading = false,
                             serverUrl = rawUrl,
                             step = LoginStep.Credentials,
-                            authProviders = providers,
                         )
                     }
                 }

@@ -245,31 +245,6 @@ private fun CredentialsStep(
         ErrorBanner(state.error)
     }
 
-    // OAuth providers (if hub has any configured)
-    if (state.authProviders.isNotEmpty()) {
-        Spacer(Modifier.height(24.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            HorizontalDivider(modifier = Modifier.weight(1f))
-            Text(
-                "  or continue with  ",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            HorizontalDivider(modifier = Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(16.dp))
-        state.authProviders.forEach { provider ->
-            OutlinedButton(
-                onClick = { /* OAuth deep-link not implemented */ },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-            ) {
-                Text("Sign in with ${provider.replaceFirstChar { it.uppercase() }}")
-            }
-        }
-    }
 }
 
 @Composable
