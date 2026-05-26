@@ -42,6 +42,7 @@ class BeszelApiClient(
     }
 
     private val httpClient: HttpClient = HttpClient(Android) {
+        expectSuccess = true
         install(ContentNegotiation) { json(json) }
         install(HttpTimeout) {
             requestTimeoutMillis = 30_000
@@ -166,7 +167,7 @@ class BeszelApiClient(
 
     private suspend inline fun <T> safeCall(crossinline block: suspend () -> T): ApiResult<T> = try {
         ApiResult.Success(block())
-    } catch (e: ClientRequestException) {
+    } catch (e: ResponseException) {
         val code = e.response.status.value
         val body = try { e.response.bodyAsText() } catch (_: Exception) { e.message ?: "Unknown error" }
         ApiResult.Error(parseErrorMessage(body), code)
