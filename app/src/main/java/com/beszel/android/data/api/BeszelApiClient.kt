@@ -29,6 +29,9 @@ sealed class ApiResult<out T> {
     data class Error(val message: String, val code: Int = 0) : ApiResult<Nothing>()
 }
 
+// Carries the already-read error body so safeCall doesn't re-read a consumed channel.
+private class ApiErrorException(val code: Int, val body: String) : Exception("HTTP $code")
+
 class BeszelApiClient(
     private val baseUrl: String,
     private val token: String,
@@ -42,12 +45,20 @@ class BeszelApiClient(
     }
 
     private val httpClient: HttpClient = HttpClient(Android) {
-        expectSuccess = true
         install(ContentNegotiation) { json(json) }
         install(HttpTimeout) {
             requestTimeoutMillis = 30_000
             connectTimeoutMillis = 15_000
             socketTimeoutMillis = 30_000
+        }
+        // Read error body here, before the channel is consumed by anything else.
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (!response.status.isSuccess()) {
+                    val body = try { response.bodyAsText() } catch (_: Exception) { "" }
+                    throw ApiErrorException(response.status.value, body)
+                }
+            }
         }
         if (trustSelfSigned) {
             engine {
@@ -167,10 +178,8 @@ class BeszelApiClient(
 
     private suspend inline fun <T> safeCall(crossinline block: suspend () -> T): ApiResult<T> = try {
         ApiResult.Success(block())
-    } catch (e: ResponseException) {
-        val code = e.response.status.value
-        val body = try { e.response.bodyAsText() } catch (_: Exception) { e.message ?: "Unknown error" }
-        ApiResult.Error(parseErrorMessage(body), code)
+    } catch (e: ApiErrorException) {
+        ApiResult.Error(parseErrorMessage(e.body), e.code)
     } catch (e: Exception) {
         ApiResult.Error(e.message ?: "Unknown error")
     }
