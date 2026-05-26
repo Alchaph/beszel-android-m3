@@ -10,6 +10,7 @@ import com.beszel.android.data.model.SystemStats
 import com.beszel.android.data.repository.SystemsRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 
 enum class DetailTab { System, Docker, Info }
 enum class TimeRange(val type: String, val perPage: Int, val label: String) {
@@ -28,6 +29,7 @@ data class SystemDetailUiState(
     val loading: Boolean = true,
     val statsLoading: Boolean = false,
     val error: String? = null,
+    val statsError: String? = null,
     val activeTab: DetailTab = DetailTab.System,
     val timeRange: TimeRange = TimeRange.OneHour,
 )
@@ -44,10 +46,11 @@ class SystemDetailViewModel(
 
     private fun loadAll() {
         viewModelScope.launch {
-            // Parallel loads
-            launch { loadDetails() }
-            launch { loadStats(_uiState.value.timeRange) }
-            launch { loadContainers() }
+            supervisorScope {
+                launch { loadDetails() }
+                launch { loadStats(_uiState.value.timeRange) }
+                launch { loadContainers() }
+            }
         }
     }
 
@@ -63,13 +66,13 @@ class SystemDetailViewModel(
     }
 
     private suspend fun loadStats(range: TimeRange) {
-        _uiState.update { it.copy(statsLoading = true) }
+        _uiState.update { it.copy(statsLoading = true, statsError = null) }
         repo.getSystemStats(systemId, range.type, range.perPage)
             .onSuccess { stats ->
                 _uiState.update { it.copy(stats = stats, statsLoading = false) }
             }
-            .onFailure {
-                _uiState.update { it.copy(statsLoading = false) }
+            .onFailure { err ->
+                _uiState.update { it.copy(statsLoading = false, statsError = err.message) }
             }
     }
 

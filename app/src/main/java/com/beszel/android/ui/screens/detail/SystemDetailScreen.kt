@@ -157,6 +157,59 @@ private fun androidx.compose.foundation.lazy.LazyListScope.systemTab(
         item { InactiveBanner(system.status) }
     }
 
+    if (state.statsLoading && state.stats.isEmpty()) {
+        item {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(200.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 2.dp)
+            }
+        }
+        return
+    }
+
+    if (state.stats.isEmpty()) {
+        item {
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        Icons.Default.BarChart, null,
+                        tint = MaterialTheme.colorScheme.outlineVariant,
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text("No chart data", style = MaterialTheme.typography.titleSmall)
+                    if (state.statsError != null) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            state.statsError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    } else {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Stats will appear once the agent sends data.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
+
     val cpuData = state.stats.map { it.cpu }
     val memData = state.stats.map { it.memPct }
     val diskData = state.stats.map { it.diskPct }
