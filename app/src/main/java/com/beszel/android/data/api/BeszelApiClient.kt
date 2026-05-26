@@ -11,8 +11,12 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.jvm.javaio.toInputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
+import javax.net.ssl.HostnameVerifier
 import kotlinx.serialization.json.Json
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -56,7 +60,7 @@ class BeszelApiClient(
                         init(null, arrayOf<TrustManager>(trustAll), SecureRandom())
                     }
                     httpsURLConnection.sslSocketFactory = sslContext.socketFactory
-                    httpsURLConnection.hostnameVerifier = { _, _ -> true }
+                    httpsURLConnection.hostnameVerifier = HostnameVerifier { _, _ -> true }
                 }
             }
         }
@@ -141,12 +145,11 @@ class BeszelApiClient(
             header(HttpHeaders.Accept, "text/event-stream")
             timeout { socketTimeoutMillis = Long.MAX_VALUE }
         }
-        val channel = response.bodyAsChannel()
-        val buffer = StringBuilder()
+        val reader = response.bodyAsChannel().toInputStream().bufferedReader(Charsets.UTF_8)
         var eventType = ""
         var eventData = ""
-        while (!channel.isClosedForRead) {
-            val line = channel.readUTF8Line() ?: break
+        while (true) {
+            val line = withContext(Dispatchers.IO) { reader.readLine() } ?: break
             when {
                 line.startsWith("event:") -> eventType = line.removePrefix("event:").trim()
                 line.startsWith("data:")  -> eventData = line.removePrefix("data:").trim()

@@ -135,7 +135,7 @@ fun SystemsScreen(
                     CircularProgressIndicator()
                 }
                 state.error != null && state.systems.isEmpty() -> ErrorState(
-                    message = state.error,
+                    message = state.error!!,
                     onRetry = viewModel::load,
                     modifier = Modifier.fillMaxSize(),
                 )
